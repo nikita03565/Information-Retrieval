@@ -5,8 +5,7 @@ from pathlib import Path
 
 import requests
 
-from scraper.parse import extract_articles
-from scraper.utils import get_logger, default_headers
+from scraper.utils import get_logger, default_headers, extract_articles
 
 
 logger = get_logger(__name__)

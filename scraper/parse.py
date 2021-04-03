@@ -1,10 +1,11 @@
 import json
 import os
 import re
+from csv import DictWriter
 from pathlib import Path
-from typing import List
 
-from lxml.html import fromstring, tostring
+from lxml.html import fromstring
+from tqdm import tqdm
 
 MIN_CHARS = 2000
 
@@ -25,42 +26,30 @@ def clean(s):
     return s.lower().strip()
 
 
-def parse_post(element):
+def parse_post(el):
     """
     Extracts data from lxml's html element object.
-    :param element: lxml html object
+    :param el: lxml html element object
     """
-    text_elements = element.xpath("//article//div[contains(@class, 'story-block story-block_type_text')]")
+    text_elements = el.xpath("//article//div[contains(@class, 'story-block story-block_type_text')]")
     text = " ".join(" ".join(t.xpath("./*/text()")) for t in text_elements)
     cleaned_text = clean(text)
     if len(cleaned_text) < MIN_CHARS:
         return None
-    tags_elements = element.xpath("//article//div[contains(@class, 'story__tags')]/a")
+    tags_elements = el.xpath("//article//div[contains(@class, 'story__tags')]/a")
     return {
-        "id": element.attrib["data-story-id"],
-        "data-story-long": element.attrib["data-story-long"],
-        "rating": element.attrib.get("data-rating"),
-        "meta-rating": element.attrib["data-meta-rating"],
-        "author_id": element.attrib["data-author-id"],
-        "comments": element.attrib["data-comments"],
-        "ts": element.attrib["data-timestamp"],
-        "author_name": element.xpath("//header//a[contains(@class, 'user__nick')]")[0].text_content().strip(),
-        "title": element.xpath("//header//h2/a")[0].text_content().strip(),
+        "id": el.attrib["data-story-id"],
+        "data-story-long": el.attrib["data-story-long"],
+        "rating": el.attrib.get("data-rating"),
+        "meta-rating": el.attrib["data-meta-rating"],
+        "author_id": el.attrib["data-author-id"],
+        "comments": el.attrib["data-comments"],
+        "ts": el.attrib["data-timestamp"],
+        "author_name": el.xpath("//header//a[contains(@class, 'user__nick')]")[0].text_content().strip(),
+        "title": el.xpath("//header//h2/a")[0].text_content().replace("\xc2\xa0", " ").replace("\xa0", " ").strip(),
         "tags": [te.text_content().strip() for te in tags_elements],
         "text": cleaned_text,
     }
-
-
-def extract_articles(html: str) -> List[str]:
-    """
-    Extracts article tags which have data-author-id attribute. Articles without that tag are advertising posts which we
-    are not interested in.
-    :param html: content of html page as string
-    :return: list of content of article tags as strings
-    """
-    tree = fromstring(html)
-    articles = tree.xpath("//article[@data-author-id]")
-    return [(tostring(a, encoding="unicode")) for a in articles]
 
 
 def parse():
@@ -70,9 +59,9 @@ def parse():
     """
     Path(output_dir).mkdir(exist_ok=True)
     files = os.listdir(dir_name)
-    ids = set()
+    ids = set()  # Save ids in set in order to not allow duplicates in output file
     res = []
-    for file in files:
+    for file in tqdm(files):
         with open(os.path.join(dir_name, file), "r", encoding="utf-8") as f:
             content = f.read()
         articles_raw = json.loads(content)
@@ -81,8 +70,10 @@ def parse():
             if parsed and parsed["id"] not in ids:
                 ids.add(parsed["id"])
                 res.append(parsed)
-    with open(os.path.join(output_dir, "parsed.json"), "w") as output:
-        output.write(json.dumps(res, sort_keys=True, indent=2, ensure_ascii=False))
+    with open(os.path.join(output_dir, "parsed.csv"), "w", encoding="utf-8") as output:
+        writer = DictWriter(output, fieldnames=res[0].keys())
+        writer.writeheader()
+        writer.writerows(res)
 
 
 if __name__ == "__main__":

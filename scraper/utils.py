@@ -1,6 +1,7 @@
 import logging
 import sys
-
+from typing import List
+from lxml.html import fromstring, tostring
 
 default_headers = {
     "authority": "pikabu.ru",
@@ -27,3 +28,15 @@ def get_logger(name):
     handler.setFormatter(log_format)
     logger.addHandler(handler)
     return logger
+
+
+def extract_articles(html: str) -> List[str]:
+    """
+    Extracts article tags which have data-author-id attribute. Articles without that tag are advertising posts which we
+    are not interested in.
+    :param html: content of html page as string
+    :return: list of content of article tags as strings
+    """
+    tree = fromstring(html)
+    articles = tree.xpath("//article[@data-author-id]")
+    return [(tostring(a, encoding="unicode")) for a in articles]
