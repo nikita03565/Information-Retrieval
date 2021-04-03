@@ -54,8 +54,7 @@ def parse_post(el):
 
 def parse():
     """
-    This function uses saved json files with raw posts data, parses it into json and saves into `save_dir_name` with
-    corresponding name.
+    This function uses saved json files with raw posts data, parses it into json and saves into csv file.
     """
     Path(output_dir).mkdir(exist_ok=True)
     files = os.listdir(dir_name)
