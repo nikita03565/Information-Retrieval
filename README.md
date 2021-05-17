@@ -1,7 +1,7 @@
 # Information Retrieval
 Project is devoted to scraping and analysis of posts data from [pikabu](https://pikabu.ru/).
 
-It consists of several modules (only one for now).
+It consists of several modules.
 
 # Scraper
 This module collects data from pikabu search, extracts posts content, cleans it from non-relevant information such as 
