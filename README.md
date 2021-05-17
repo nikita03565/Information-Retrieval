@@ -21,10 +21,9 @@ Links to parsed and filtered data:
 
 Parsed results in json format is a development artifact, we'll use csv for further tasks.
 # Exploratory data analysis
-Todo
+There is one main file `EDA/EDA.ipynb` and two helper files to perform stemming and lemmatization: `EDA/stem.ipynb` and 
+`lemmatize.ipynb` respectively.
 
-# Classification, clustering, topic modelling
-Todo
-
-# Recommendation system
-Todo
+# Clustering, topic modelling
+Source files are located in `clustering_topic_modelling` subdirectory. Output of topic modelling is the html file which 
+is stored in `clustering_topic_modelling/topic_modelling_output`.
