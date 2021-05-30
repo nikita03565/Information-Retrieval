@@ -8,6 +8,9 @@ from pymystem3 import Mystem
 
 
 class Porter:
+    """
+    Porter stemmer implementation
+    """
     PERFECTIVEGROUND = re.compile("((ив|ивши|ившись|ыв|ывши|ывшись)|((?<=[ая])(в|вши|вшись)))$")
     REFLEXIVE = re.compile("(с[яь])$")
     ADJECTIVE = re.compile("(ее|ие|ые|ое|ими|ыми|ей|ий|ый|ой|ем|им|ым|ом|его|ого|ему|ому|их|ых|ую|юю|ая|яя|ою|ею)$")
@@ -77,6 +80,12 @@ def text_values_count(texts):
 
 
 def perform_lemmatization(data_path, save_path):
+    """
+    Performs lemmatization operation and removes stopwords.
+    :param data_path: path to input csv file
+    :param save_path: path to csv file to save
+    :return: Pandas dataframe with processed text
+    """
     df = pd.read_csv(data_path, parse_dates=["dtm"], converters={"tags": literal_eval})
     nltk.download("stopwords")
     mystem = Mystem()
@@ -86,19 +95,25 @@ def perform_lemmatization(data_path, save_path):
         lemmas = mystem.lemmatize(text)
         return "".join((l for l in lemmas if l not in russian_stopwords))
 
-    df["text"] = df.apply(lambda row: process_text(row["text"]), axis=1)  # override text
+    df["text"] = df.apply(lambda row: process_text(row["text"]), axis=1)  # overrides text
 
     df.to_csv(save_path, encoding="utf-8", index=False)
 
     return df
 
 
-def stem_text(text):
-    return " ".join(Porter.stem(w) for w in text.split())
-
-
 def perform_stem(data_path, save_path):
+    """
+    Performs stemming operation. Expects lemmatized texts.
+    :param data_path: path to input csv file
+    :param save_path: path to csv file to save
+    :return: Pandas dataframe with processed text
+    """
+
+    def stem_text(text):
+        return " ".join(Porter.stem(w) for w in text.split())
+
     df = pd.read_csv(data_path, parse_dates=["dtm"], converters={"tags": literal_eval})
-    df["text"] = df.apply(lambda row: stem_text(row["text"]), axis=1)  # override text
+    df["text"] = df.apply(lambda row: stem_text(row["text"]), axis=1)  # overrides text
     df.to_csv(save_path, encoding="utf-8", index=False)
     return df
